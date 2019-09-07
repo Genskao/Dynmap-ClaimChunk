@@ -1,0 +1,6 @@
+name: Dynmap-ClaimChunk
+main: org.dynmap.claimchunk.DynmapClaimChunkPlugin
+version: "${project.version}-${BUILD_NUMBER}"
+author: genskao
+depend: [ dynmap, ClaimChunk ]
+
