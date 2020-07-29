@@ -73,6 +73,15 @@ public class DynmapClaimChunkPlugin extends JavaPlugin {
         return interval;
     }
 
+    public DynmapClaimChunkPlugin() {
+
+    }
+
+    public static void main(String[] args) {
+        System.out.println("Please put this jar file in your /plugins/ folder.");
+        System.exit(0);
+    }
+
     @Override
     public void onLoad() {
         log = this.getLogger(); // Load the logger
@@ -133,10 +142,11 @@ public class DynmapClaimChunkPlugin extends JavaPlugin {
 
         /* Parse into ClaimChunk centric mapping, split by world */
         final Map<String, ClaimChunkBlocks> blocks_by_claimchunk = new HashMap<>();
-
         final ClaimChunk claimChunkInstance = ClaimChunk.getInstance();
-        for (final SimplePlayerData spd : claimChunkInstance.getPlayerHandler().getJoinedPlayers()) {
-            final String playerId = spd.player.toString();
+        final Collection<SimplePlayerData> players = claimChunkInstance.getPlayerHandler().getJoinedPlayers();
+
+        for (final SimplePlayerData player : players) {
+            String playerId = player.player.toString();
 
             ClaimChunkBlocks claimChunkBlocks = blocks_by_claimchunk.get(playerId); /* Look up ClaimChunk */
             if (claimChunkBlocks == null) {    /* Create ClaimChunk block if first time */
@@ -144,10 +154,10 @@ public class DynmapClaimChunkPlugin extends JavaPlugin {
                 blocks_by_claimchunk.put(playerId, claimChunkBlocks);
             }
 
-            final ChunkPos[] claimedChunks = claimChunkInstance.getChunkHandler().getClaimedChunks(spd.player);
+            final ChunkPos[] claimedChunks = claimChunkInstance.getChunkHandler().getClaimedChunks(player.player);
             for (int i = 0; i < claimedChunks.length; i++) {
-                final ChunkPos pos = claimedChunks[i];
-                final String world = pos.getWorld();
+                ChunkPos pos = claimedChunks[i];
+                String world = pos.getWorld();
 
                 LinkedList<ClaimChunkBlock> blocks = claimChunkBlocks.getBlocks().get(world);
                 if (blocks == null) {
@@ -159,12 +169,11 @@ public class DynmapClaimChunkPlugin extends JavaPlugin {
             }
         }
 
-        for (final SimplePlayerData spd : claimChunkInstance.getPlayerHandler().getJoinedPlayers()) {
-            final String playerId = spd.player.toString();
-            final String playerName = claimChunkInstance.getPlayerHandler().getUsername(spd.player);
+        for (final SimplePlayerData player : players) {
+            final String playerId = player.player.toString();
+            final String playerName = claimChunkInstance.getPlayerHandler().getUsername(player.player);
             final ClaimChunkBlocks claimChunkBlocks = blocks_by_claimchunk.get(playerId); /* Look up ClaimChunk */
             if (claimChunkBlocks == null) continue;
-
 
             /* Loop through each world that ClaimChunk has blocks on */
             for (Map.Entry<String, LinkedList<ClaimChunkBlock>> worldBlocks : claimChunkBlocks.getBlocks().entrySet()) {
@@ -191,16 +200,17 @@ public class DynmapClaimChunkPlugin extends JavaPlugin {
     public void handleClaimChunkOnWorld(final String formatInfoWindow, final String playerName, final String world,
                                         final LinkedList<ClaimChunkBlock> blocks, final Map<String, AreaMarker> newmap) {
 
-        if (blocks.isEmpty())
-            return;
+        if (blocks.isEmpty()) return;
 
         LinkedList<ClaimChunkBlock> nodevals = new LinkedList<>();
         TileFlags curblks = new TileFlags();
+
         /* Loop through blocks: set flags on blockmaps */
         for (final ClaimChunkBlock b : blocks) {
             curblks.setFlag(b.getX(), b.getZ(), true); /* Set flag for block */
             nodevals.addLast(b);
         }
+
         /* Loop through until we don't find more areas */
         int poly_index = 0; /* Index of polygon for given claimChunk */
         while (nodevals != null) {
